@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+	
+	<head>
+		
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Package Email Sender</title>
+		
+		<style>
+			#button {
+				width: 120px;
+				height: 50px;
+				border: solid;
+			}
+			
+			#tp{
+				font-size: 24px;
+				text-decoration: none;
+			}
+			
+			#text{
+				width: 500px;
+				height: 200px;
+				border: solid;
+			}
+			
+			#sendbtn{
+				display: none;
+			}
+		</style>
+		
+	</head>
+	
+	<body>
+		
+		<video id="webCam"> </video>
+		<canvas id="canvas"> </canvas>
+		<div id="button"><a id="tp" onclick="takePicture()">CAPTURE</a></div>
+		<input id="text" type="text" value="" />
+		<input id="sendbtn" type="button" value="Send" onclick="sendEmail()" />
+		
+		
+		
+		<script src="scripts/jquery-2.2.4.js"></script>
+		<script src="scripts/tesseract-2.0.2.js"></script>
+		<script src="scripts/gstatic_firebase-7.17.1.js"></script>
+		<script src="scripts/emailjs-2.0.0.js"></script>
+		<script src="scripts/list.js"></script>
+		<script type="">
+			
+			(function() {
+				emailjs.init("user_rDY2OqM0rFwfWNLTpzh5A");
+			})();
+			
+			class Webcam {
+				
+			    constructor(webcamElement, facingMode = 'user', canvasElement = null, snapSoundElement = null) {
+			      	this._webcamElement = webcamElement;
+			    	this._webcamElement.width = this._webcamElement.width || 640;
+			      	this._webcamElement.height = this._webcamElement.height || this._webcamElement.width * (3 / 4);
+			      	this._facingMode = facingMode;
+			      	this._webcamList = [];
+			      	this._streamList = [];
+			      	this._selectedDeviceId = '';
+			      	this._canvasElement = canvasElement;
+			      	this._snapSoundElement = snapSoundElement;
+			    }
+			
+			    get facingMode(){
+			      	return this._facingMode;
+			    }
+			
+			    set facingMode(value){
+			      	this._facingMode = value;
+			    }
+			
+			    get webcamList(){
+			      	return this._webcamList;
+			    }
+			
+			    get webcamCount(){
+			      	return this._webcamList.length;
+			    }
+			
+			    get selectedDeviceId(){
+			      	return this._selectedDeviceId;
+			    }
+			
+			    // Get all video input devices info
+			    getVideoInputs(mediaDevices){
+			      	this._webcamList = [];
+			      	mediaDevices.forEach(mediaDevice => {
+			        	if (mediaDevice.kind === 'videoinput') {
+			          		this._webcamList.push(mediaDevice);
+			        	}
+			      	});
+			      	if(this._webcamList.length == 1){
+			        	this._facingMode = 'user';
+			      	}    
+			      	return this._webcamList;
+			    }
+			
+			    // Get media constraints 
+			    getMediaConstraints() {
+			        var videoConstraints = {};
+			        if (this._selectedDeviceId == '') {
+			            videoConstraints.facingMode =  this._facingMode;
+			        } else {
+			            videoConstraints.deviceId = { exact: this._selectedDeviceId};
+			        }
+			        var constraints = {
+			            video: videoConstraints,
+			            audio: false
+			        };
+			        return constraints;
+			    }
+			
+			    // Select camera based on facingMode 
+			    selectCamera(){
+			      	for(let webcam of this._webcamList){
+			        	if((this._facingMode=='user' && webcam.label.toLowerCase().includes('front')) || (this._facingMode=='enviroment' && webcam.label.toLowerCase().includes('back'))){
+			          		this._selectedDeviceId = webcam.deviceId;
+			          		break;
+			        	}
+			      	}
+			    }
+			
+			    // Change Facing mode and selected camera  
+			    flip(){
+			      	this._facingMode = (this._facingMode == 'user')? 'enviroment': 'user'; 
+			      	this._webcamElement.style.transform = "";
+			      	this.selectCamera();  
+			    }
+			
+			    async start(startStream = true) {
+			      	return new Promise((resolve, reject) => {         
+			        	this.stop();
+			        	navigator.mediaDevices.getUserMedia(this.getMediaConstraints()) //get permission from user
+			        	.then(stream => {
+			            	this._streamList.push(stream);
+			            	this.info() //get all video input devices info
+			              	.then(webcams =>{
+			                	this.selectCamera();   //select camera based on facingMode
+			                	if(startStream){
+				                    this.stream()
+				                        .then(facingMode =>{
+			                            	resolve(this._facingMode);
+			                        	})
+			                        	.catch(error => {
+			                            	reject(error);
+			                        	});
+			                	}else{
+			                    	resolve(this._selectedDeviceId);
+			                	}
+			              	}) 
+			              	.catch(error => {
+			                	reject(error);
+			              	});
+			          	})
+			          	.catch(error => {
+			              	reject(error);
+			          	});
+			      	});
+			    }
+			
+			    /* Get all video input devices info */ 
+			    async info(){
+			      	return new Promise((resolve, reject) => {            
+			        	navigator.mediaDevices.enumerateDevices()
+			          	.then(devices =>{
+			            	this.getVideoInputs(devices);
+			            	resolve(this._webcamList);
+			          	}) 
+			          	.catch(error => {
+			            	reject(error);
+			          	});
+			      	});
+			    }
+			  
+			    /* Start streaming webcam to video element */ 
+			    async stream() {
+			      	return new Promise((resolve, reject) => {         
+			        navigator.mediaDevices.getUserMedia(this.getMediaConstraints())
+			          .then(stream => {
+			              	this._streamList.push(stream);
+			              	this._webcamElement.srcObject = stream;
+			             	// reverse image
+			              	// if(this._facingMode == 'user'){
+			              		// this._webcamElement.style.transform = "scale(-1,1)";
+			              	// }
+			              	this._webcamElement.play();
+			              	resolve(this._facingMode);
+			          	})
+			          	.catch(error => {
+			              	console.log(error);
+			              	reject(error);
+			          	});
+			      	});
+			    }
+			
+			    /* Stop streaming webcam */ 
+			    stop() {
+			      	this._streamList.forEach(stream => {
+			        	stream.getTracks().forEach(track => {
+			        	  	track.stop();
+			        	});
+			      	});   
+			    }
+			
+			    snap() {
+			      	if(this._canvasElement!=null){
+			        	if(this._snapSoundElement!= null){
+			          		this._snapSoundElement.play();
+			        	}
+				        this._canvasElement.height = this._webcamElement.scrollHeight;
+				        this._canvasElement.width = this._webcamElement.scrollWidth;
+				        let context = this._canvasElement.getContext('2d');
+				        // reverse image
+				        // if(this._facingMode == 'user'){
+				          	// context.translate(this._canvasElement.width, 0);
+				          	// context.scale(-1, 1);
+				        // }
+				        context.clearRect(0, 0, this._canvasElement.width, this._canvasElement.height);
+				        context.drawImage(this._webcamElement, 0, 0, this._canvasElement.width, this._canvasElement.height);
+				        let data = this._canvasElement.toDataURL('image/png');
+				        
+				        return data;
+			      	}
+				    else{
+				       	throw "canvas element is missing";
+				    }
+			    }
+			    
+			    getImage() {
+				    return this._webcamElement;
+			    }
+			    
+			}
+			
+			var Email = {
+				send: function (a) {
+					return new Promise(function (n, e) { 
+						a.nocache = Math.floor(1e6 * Math.random() + 1), a.Action = "Send";
+						var t = JSON.stringify(a);
+						Email.ajaxPost("https://smtpjs.com/v3/smtpjs.aspx?", t, function (e) { n(e) } )
+					}) 
+				}, 
+				ajaxPost: function (e, n, t) {
+					var a = Email.createCORSRequest("POST", e);
+					a.setRequestHeader("Content-type", "application/x-www-form-urlencoded"), a.onload = function () {
+						var e = a.responseText; null != t && t(e) 
+					}, 
+					a.send(n) 
+				}, 
+				ajax: function (e, n) {
+					var t = Email.createCORSRequest("GET", e); t.onload = function () {
+						var e = t.responseText; null != n && n(e)
+					}, 
+					t.send() 
+				}, 
+				createCORSRequest: function (e, n) {
+					var t = new XMLHttpRequest;
+					return "withCredentials" in t ? t.open(e, n, !0) : "undefined" != typeof XDomainRequest ? (t = new XDomainRequest).open(e, n) : t = null, t 
+				}
+			};
+
+		
+			const webCamElement = document.getElementById("webCam");
+			const canvasElement = document.getElementById("canvas");
+			const webcam = new Webcam(webCamElement, "user", canvasElement);
+			webcam.start();
+			webcam.flip();
+			
+			function takePicture() {
+				
+				let picture = webcam.snap();
+				let image = webcam.getImage();
+				// document.querySelector("a").href = picture;
+				
+				img = webcam.getImage();
+				Tesseract.recognize(
+			  		picture,
+				  	'eng',
+				  	{ logger: m => console.log(m) }
+				).then(({ data: { text } }) => {
+				  	// console.log(text);
+				  	getReceiver(text)
+				})
+				
+			}
+			
+			var name, email;
+			function getReceiver(str){
+				
+				var first_name, last_name, len, con=false, tc;
+				
+				// document.getElementById("text").value = str;
+				// alert(str);
+				// alert(document.getElementById("text").value);
+				// str = "unbRoKEN LAUraHillenBRaNd";
+				
+				str = str.toLowerCase();
+				str += " ";
+				
+				for(var i=1; i<=listr; i++){
+					
+					len = list[i][1].length;
+					for(var j=0; j<str.length-len; j++){
+						tc = true;
+						for(var k=0; k<=len-1; k++){
+							// console.log(list[i][1][k] + " " + str[k+j]);
+							if(list[i][1][k] != str[k+j]){
+								tc = false;
+								break;
+							}
+							// alert(tc);
+						}
+						if(tc == true){
+							// alert(j);
+							first_name = list[i][1];
+							// alert(first_name);
+							break;
+						}
+					}
+					
+					if(tc == true){
+						
+						len = list[i][2].length;
+						for(var j=0; j<str.length-len; j++){
+							tc = true;
+							for(var k=0; k<=len-1; k++){
+								if(list[i][2][k] != str[k+j]){
+									tc = false;
+									break;
+								}
+							}
+							if(tc == true){
+								last_name = list[i][2];
+								email = list[i][3];
+								// alert(last_name)
+								con = true;
+								break;
+							}
+						}
+						
+					}
+					
+				}
+				if(con == false){
+					alert("No student name is detected. The text detected is " + str + ". Please try again. (If this is not the first time, please make sure that there is really student name text in front of you camera or contact server administrator for help.)");
+				}else{
+					name = first_name + " " + last_name;
+					document.getElementById("sendbtn").style.display = "inline-block";
+					document.getElementById("text").value = "Please make sure that: An email would be sent to " + name + " to remind his/her package has arrived.";
+				}
+				
+			}
+			
+			function sendEmail(params){
+				
+				emailjs.send("service_vm9iult","template_dag07bt",{
+					to_name: name,
+					to_email: email,
+				})
+				.then(function res(){
+					alert("Email successfully sent.")
+				});
+				
+			}
+			
+			
+		</script>
+		
+	</body> 
+</html>
