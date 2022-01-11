@@ -39,7 +39,7 @@
 		<div id="button"><a id="tp" onclick="takePicture()">CAPTURE</a></div>
 		<input id="text" type="text" value="" />
 		<input id="sendbtn" type="button" value="Send" onclick="sendEmail()" />
-		
+		<input id="flipbtn" type="button" value="Flip" onclick="cameraFlip()" />
 		
 		
 		<script src="scripts/jquery-2.2.4.js"></script>
@@ -270,7 +270,10 @@
 			const canvasElement = document.getElementById("canvas");
 			const webcam = new Webcam(webCamElement, "user", canvasElement);
 			webcam.start();
-			webcam.flip();
+			
+			function cameraFlip(){
+				webcam.flip();
+			}
 			
 			function takePicture() {
 				
