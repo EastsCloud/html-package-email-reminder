@@ -130,7 +130,8 @@
 			    flip(){
 			      	this._facingMode = (this._facingMode == 'user')? 'enviroment': 'user'; 
 			      	this._webcamElement.style.transform = "";
-			      	this.selectCamera();  
+			      	this.selectCamera();
+				alert("Now, _facingMode is " + this._facingMode);
 			    }
 			
 			    async start(startStream = true) {
