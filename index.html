@@ -84,7 +84,68 @@
 			  	detected_text = text;
 			})
 			
-			
+			var first_name, last_name, len, con=false, tc;
+				
+			// document.getElementById("text").value = str;
+			// alert(str);
+			// alert(document.getElementById("text").value);
+			// str = "unbRoKEN LAUraHillenBRaNd";
+
+			str = str.toLowerCase();
+			str += " ";
+
+			for(var i=1; i<=listr; i++){
+
+				len = list[i][1].length;
+				for(var j=0; j<str.length-len; j++){
+					tc = true;
+					for(var k=0; k<=len-1; k++){
+						// console.log(list[i][1][k] + " " + str[k+j]);
+						if(list[i][1][k] != str[k+j]){
+							tc = false;
+							break;
+						}
+						// alert(tc);
+					}
+					if(tc == true){
+						// alert(j);
+						first_name = list[i][1];
+						// alert(first_name);
+						break;
+					}
+				}
+
+				if(tc == true){
+
+					len = list[i][2].length;
+					for(var j=0; j<str.length-len; j++){
+						tc = true;
+						for(var k=0; k<=len-1; k++){
+							if(list[i][2][k] != str[k+j]){
+								tc = false;
+								break;
+							}
+						}
+						if(tc == true){
+							last_name = list[i][2];
+							email = list[i][3];
+							// alert(last_name)
+							con = true;
+							break;
+						}
+					}
+
+				}
+
+			}
+			if(con == false){
+				alert("No student name is detected. The text detected is " + str + ". Please try again. (If this is not the first time, please make sure that there is really student name text in front of you camera or contact server administrator for help.)");
+			}else{
+				name = first_name + " " + last_name;
+				document.getElementById("sendbtn").style.display = "inline-block";
+				document.getElementById("text").value = "Please make sure that: An email would be sent to " + name + " to remind his/her package has arrived.";
+			}
+
 		}
 		
 	</script>
