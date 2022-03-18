@@ -45,10 +45,12 @@
 	
 	<script type="">
 		
-		var listr=1, listc=3;
-		var student_list = [
+		var listr=3;
+		var list = [
 			["", "", "", ""],
-			["", "qingyang", "zhu", "qingyang.zhu@rectorywolves.com"]
+			["", "qingyang", "zhu", "qingyang.zhu@rectorywolves.com"],
+			["", "nutrition", "facts", ""],
+			["", "", "", ""]
 		]
 		
 		Webcam.set({
@@ -144,6 +146,7 @@
 				name = first_name + " " + last_name;
 				document.getElementById("sendbtn").style.display = "inline-block";
 				document.getElementById("text").value = "Please make sure that: An email would be sent to " + name + " to remind his/her package has arrived.";
+				alert(name);
 			}
 
 		}
