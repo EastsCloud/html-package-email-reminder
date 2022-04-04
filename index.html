@@ -98,51 +98,17 @@
 				var str = detected_text;
 				str = str.toLowerCase();
 				str += " ";
-
-				for(var i=1; i<=listr; i++){
-
-					len = list[i][1].length;
-					for(var j=0; j<str.length-len; j++){
-						tc = true;
-						for(var k=0; k<=len-1; k++){
-							// console.log(list[i][1][k] + " " + str[k+j]);
-							if(list[i][1][k] != str[k+j]){
-								tc = false;
-								break;
-							}
-							// alert(tc);
-						}
-						if(tc == true){
-							// alert(j);
-							first_name = list[i][1];
-							// alert(first_name);
-							break;
-						}
+				
+				var str_list = [], str_listn=0, temp_rec="";
+				for(var i=0; i<str.length; i++){
+					if(str[i] == " "){
+						str_listn++;
+						str_list[str_listn] = temp_rec;
+						temp_rec = "";
 					}
-
-					if(tc == true){
-
-						len = list[i][2].length;
-						for(var j=0; j<str.length-len; j++){
-							tc = true;
-							for(var k=0; k<=len-1; k++){
-								if(list[i][2][k] != str[k+j]){
-									tc = false;
-									break;
-								}
-							}
-							if(tc == true){
-								last_name = list[i][2];
-								email = list[i][3];
-								// alert(last_name)
-								con = true;
-								break;
-							}
-						}
-
-					}
-
+					temp_rec += str[i];
 				}
+
 				if(con == false){
 					alert("No student name is detected. The text detected is " + str + ". Please try again. (If this is not the first time, please make sure that there is really student name text in front of you camera or contact server administrator for help.)");
 				}else{
