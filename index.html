@@ -121,6 +121,23 @@
 				}
 
 			}
+			
+			function send_email(){
+				
+				Email.send({
+					Host : "smtp.gmail.com",
+					port : 465,
+					Username : "kaiwen.zheng@rectorywolves.org",
+					Password : "Cbft2587",
+					To : reciever.value,
+				    	From : sender.value,
+				    	Subject : subj.value,
+				    	Body : msg.value
+				}).then(
+				    	message => alert(message)
+				);
+				
+			}
 
 		</script>
 
